@@ -4,7 +4,7 @@
 
 # Run commands in a container and return.
 function Invoke-Container([string[]]$DockerParameters, [string[]]$ImageParameters) {
-    $allParameters = @('run', '--rm'; $DockerParameters; $env:FULL_IMAGE_NAME)
+    $allParameters = @('run', '--tmpfs', '/var/lib/firebird/data', '--rm'; $DockerParameters; $env:FULL_IMAGE_NAME)
     if ($ImageParameters) {
         # Do not append a $null as last parameter if $ImageParameters is empty
         $allParameters += $ImageParameters
@@ -17,7 +17,7 @@ function Invoke-Container([string[]]$DockerParameters, [string[]]$ImageParameter
 
 # Run commands in a detached container.
 function Use-Container([string[]]$Parameters, [Parameter(Mandatory)][ScriptBlock]$ScriptBlock) {
-    $allParameters = @('run'; $Parameters; '--detach', $env:FULL_IMAGE_NAME)
+    $allParameters = @('run'; $Parameters; '--tmpfs', '/var/lib/firebird/data', '--detach', $env:FULL_IMAGE_NAME)
 
     Write-Verbose 'Starting container... Command line is'
     Write-Verbose "  docker $allParameters"
