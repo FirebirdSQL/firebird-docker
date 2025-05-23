@@ -29,7 +29,7 @@ ENV FIREBIRD_MAJOR=5
 #   FB 3.0 uses libncurses5: https://github.com/FirebirdSQL/firebird/issues/6418#issuecomment-826245785
 RUN set -eux; \
     apt-get update; \
-    # Install prerequisites + curl for download
+    # Install prerequisites + curl, ca-certificates for download
     apt-get install -y --no-install-recommends \
         libatomic1 \
         libicu72 \
@@ -52,8 +52,8 @@ RUN set -eux; \
     tar --extract --file=firebird-bundle.tar.gz --gunzip --verbose --strip-components=1; \
     ./install.sh -silent; \
     # Remove downloaded archive and temporary files from /tmp
-    rm firebird-bundle.tar.gz install.sh *.txt; \
-    # Remove unnecessary files from /opt/firebird
+    rm firebird-bundle.tar.gz install.sh *.txt buildroot.tar.gz; \
+    # Remove unnecessary files
     rm -rf /opt/firebird/doc \
            /opt/firebird/examples \
            /opt/firebird/help \
@@ -61,8 +61,9 @@ RUN set -eux; \
     # Remove 'employee' sample database from 'databases.conf'
     sed -i '/^employee/d' /opt/firebird/databases.conf; \
     \
-    # Clean up temporary packages (curl) and apt lists
-    apt-get purge -y --auto-remove curl; \
+    # Clean up temporary packages (curl, ca-certificates) and apt lists
+    apt-get purge -y --auto-remove curl ca-certificates; \
+    apt-get clean; \
     rm -rf /var/lib/apt/lists/*
 
 # Fix libtommath for FB 3.0 -- https://github.com/FirebirdSQL/firebird/issues/5716#issuecomment-826239174
