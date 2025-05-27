@@ -42,17 +42,17 @@ RUN set -eux; \
         curl; \
     \
     # Download
+    mkdir -p /tmp/firebird_install; \
     echo "Downloading Firebird from $FIREBIRD_RELEASE_URL"; \
-    curl -fSL "$FIREBIRD_RELEASE_URL" -o /tmp/firebird-bundle.tar.gz; \
-    echo "Verifying checksum: $FIREBIRD_RELEASE_SHA256 for /tmp/firebird-bundle.tar.gz"; \
-    echo "$FIREBIRD_RELEASE_SHA256 /tmp/firebird-bundle.tar.gz" | sha256sum -c -; \
+    curl -fSL "$FIREBIRD_RELEASE_URL" -o /tmp/firebird_install/firebird-bundle.tar.gz; \
+    echo "Verifying checksum: $FIREBIRD_RELEASE_SHA256 for downloaded file"; \
+    echo "$FIREBIRD_RELEASE_SHA256 /tmp/firebird_install/firebird-bundle.tar.gz" | sha256sum -c -; \
     \
     # Extract, install, clean
-    cd /tmp; \
+    cd /tmp/firebird_install; \
     tar --extract --file=firebird-bundle.tar.gz --gunzip --verbose --strip-components=1; \
     ./install.sh -silent; \
-    # Remove downloaded archive and temporary files from /tmp
-    rm firebird-bundle.tar.gz install.sh *.txt buildroot.tar.gz; \
+    rm -rf /tmp/firebird_install; \
     # Remove unnecessary files
     rm -rf /opt/firebird/doc \
            /opt/firebird/examples \
