@@ -214,7 +214,7 @@ create_db() {
     if [ -n "$FIREBIRD_DATABASE" ]; then
         # Expand FIREBIRD_DATABASE to full path
         cd "$FIREBIRD_DATA"
-        export FIREBIRD_DATABASE=$(realpath --canonicalize-missing $FIREBIRD_DATABASE)
+        export FIREBIRD_DATABASE=$(realpath --canonicalize-missing "$FIREBIRD_DATABASE")
 
         # Store it for other sessions of this instance
         echo "export FIREBIRD_DATABASE='$FIREBIRD_DATABASE'" > ~/.bashrc

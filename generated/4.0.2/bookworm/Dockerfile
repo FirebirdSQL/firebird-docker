@@ -7,6 +7,9 @@
 
 FROM debian:bookworm-slim
 
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
 ARG ARCH_ARM64
 
 # ARM64 arch

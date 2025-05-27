@@ -4,6 +4,8 @@
 
 # Run commands in a container and return.
 function Invoke-Container([string[]]$DockerParameters, [string[]]$ImageParameters) {
+    assert $env:FULL_IMAGE_NAME "'FULL_IMAGE_NAME' environment variable must be set to the image name to test."
+    
     $allParameters = @('run', '--tmpfs', '/var/lib/firebird/data', '--rm'; $DockerParameters; $env:FULL_IMAGE_NAME)
     if ($ImageParameters) {
         # Do not append a $null as last parameter if $ImageParameters is empty
@@ -17,6 +19,8 @@ function Invoke-Container([string[]]$DockerParameters, [string[]]$ImageParameter
 
 # Run commands in a detached container.
 function Use-Container([string[]]$Parameters, [Parameter(Mandatory)][ScriptBlock]$ScriptBlock) {
+    assert $env:FULL_IMAGE_NAME "'FULL_IMAGE_NAME' environment variable must be set to the image name to test."
+
     $allParameters = @('run'; $Parameters; '--tmpfs', '/var/lib/firebird/data', '--detach', $env:FULL_IMAGE_NAME)
 
     Write-Verbose 'Starting container... Command line is'
@@ -98,11 +102,12 @@ function ContainsExactly([Parameter(ValueFromPipeline)]$InputValue, [string[]]$P
 }
 
 # Asserts that LastExitCode is equal to ExpectedValue.
-function ExitCodeIs ([Parameter(ValueFromPipeline)]$InputValue, [int]$ExpectedValue, [string]$ErrorMessage) {
+function ExitCodeIs ([Parameter(ValueFromPipeline)]$Unused, [int]$ExpectedValue, [string]$ErrorMessage) {
     process { }
     end {
+        # Actual value from pipeline is discarded. Just check for $LastExitCode.
         if ([string]::IsNullOrEmpty($ErrorMessage)) {
-            $ErrorMessage = "ExitCode = $InputValue, expected = $ExpectedValue."
+            $ErrorMessage = "ExitCode = $LastExitCode, expected = $ExpectedValue."
         }
         assert ($LastExitCode -eq $ExpectedValue) $ErrorMessage
     }
@@ -171,14 +176,41 @@ task FIREBIRD_DATABASE_can_create_database {
 }
 
 task FIREBIRD_DATABASE_can_create_database_with_absolute_path {
-    Use-Container -Parameters '-e', 'FIREBIRD_DATABASE=/tmp/test.fdb' {
+    $absolutePathDatabase = '/tmp/test.fdb'
+    Use-Container -Parameters '-e', "FIREBIRD_DATABASE=$absolutePathDatabase" {
         param($cId)
 
-        docker exec $cId test -f /tmp/test.fdb |
-            ExitCodeIs -ExpectedValue 0 -ErrorMessage "Expected database file '/tmp/test.fdb' to exist when absolute path is used."
+        docker exec $cId test -f $absolutePathDatabase |
+            ExitCodeIs -ExpectedValue 0 -ErrorMessage "Expected database file '$absolutePathDatabase' to exist when absolute path is used."
 
         docker logs $cId |
-            Contains -Pattern "Creating database '/tmp/test.fdb'" -ErrorMessage "Expected log message indicating creation of database '/tmp/test.fdb' with absolute path."
+            Contains -Pattern "Creating database '$absolutePathDatabase'" -ErrorMessage "Expected log message indicating creation of database '$absolutePathDatabase' when absolute path is used."
+    }
+}
+
+task FIREBIRD_DATABASE_can_create_database_with_spaces_in_path {
+    $absolutePathDatabase = '/tmp/test database.fdb'
+    Use-Container -Parameters '-e', "FIREBIRD_DATABASE=$absolutePathDatabase" {
+        param($cId)
+
+        docker exec $cId test -f $absolutePathDatabase |
+            ExitCodeIs -ExpectedValue 0 -ErrorMessage "Expected database file '$absolutePathDatabase' to exist when spaces in path are used."
+
+        docker logs $cId |
+            Contains -Pattern "Creating database '$absolutePathDatabase'" -ErrorMessage "Expected log message indicating creation of database '$absolutePathDatabase' when spaces in path are used."
+    }
+}
+
+task FIREBIRD_DATABASE_can_create_database_with_unicode_characters {
+    $absolutePathDatabase = '/tmp/próf-áêïôù-🗄️.fdb'
+    Use-Container -Parameters '-e', "FIREBIRD_DATABASE=$absolutePathDatabase" {
+        param($cId)
+
+        docker exec $cId test -f $absolutePathDatabase |
+            ExitCodeIs -ExpectedValue 0 -ErrorMessage "Expected database file '$absolutePathDatabase' to exist when unicode characters are used."
+
+        docker logs $cId |
+            Contains -Pattern "Creating database '$absolutePathDatabase'" -ErrorMessage "Expected log message indicating creation of database '$absolutePathDatabase' when unicode characters are used."
     }
 }
 
