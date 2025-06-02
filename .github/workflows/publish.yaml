@@ -14,7 +14,7 @@ concurrency:
 jobs:
 
   build-test-publish:
-    if: ${{ github.event_name != 'schedule' || github.repository == 'FirebirdSQL/firebird-docker' }}
+    if: ${{ github.repository == 'FirebirdSQL/firebird-docker' }}
     runs-on: ubuntu-latest
 
     steps:
