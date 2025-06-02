@@ -1,5 +1,6 @@
 param(
-    [switch]$NoCache
+    [switch]$NoCache,
+    [string]$TestFilter  # Filter by test name, e.g. 'FIREBIRD_USER_can_create_user'. -- Used only in 'Test' task.
 )
 
 # Synopsis: Build docker images.
@@ -55,12 +56,21 @@ task Test Build, {
     Write-Build Magenta "----- [$BUILDER_IMAGE_VERSION] ---------------------"
     $tag = $BUILDER_IMAGE_TAGS[0]
 
+    if ($TestFilter) {
+        Write-Verbose "Running single test '$TestFilter'..."
+    } else {
+        Write-Verbose "Running all tests..."
+        $TestFilter = '*'
+    }
+
     $env:FULL_IMAGE_NAME = "$BUILDER_IMAGE_PREFIX/${BUILDER_IMAGE_NAME}-amd64:${tag}"
-    Invoke-Build * image.tests.ps1
+    Write-Verbose "  Image: $($env:FULL_IMAGE_NAME)"
+    Invoke-Build $TestFilter image.tests.ps1
 
     if ($BUILDER_HAS_ARCH_ARM64) {
         $env:FULL_IMAGE_NAME = "$BUILDER_IMAGE_PREFIX/${BUILDER_IMAGE_NAME}-arm64:${tag}"
-        Invoke-Build * image.tests.ps1
+        Write-Verbose "  Image: $($env:FULL_IMAGE_NAME)"
+        Invoke-Build $TestFilter image.tests.ps1
     }
 }
 
