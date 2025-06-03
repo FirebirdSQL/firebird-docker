@@ -297,12 +297,12 @@ More information:
 ## Prerequisites
 
   - [Docker](https://docs.docker.com/engine/install/)
-  - [Powershell](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux)
+  - [Powershell 7.5+](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux)
   - [Invoke-Build](https://github.com/nightroman/Invoke-Build#install-as-module)
 
 
 
-## Build
+## Building
 
 To generate the source files and build each image from [`assets.json`](assets.json) configuration file, run:
 
@@ -316,12 +316,69 @@ You can then check all created images with:
 docker image ls firebirdsql/firebird
 ```
 
+### Filtering builds
+
+> You can filter builds by **version** or **distribution**:
+
+```bash
+# Build only Firebird 5.x images
+Invoke-Build Build -VersionFilter "5"
+
+# Build only specific version
+Invoke-Build Build -VersionFilter "5.0.2"
+
+# Build only bookworm distribution images
+Invoke-Build Build -DistributionFilter "bookworm"
+
+# Combine filters
+Invoke-Build Build -VersionFilter "4" -DistributionFilter "jammy"
+```
 
 
-## Tests
+
+## Testing
 
 To run the test suite for each image, use:
 
 ```bash
 Invoke-Build Test
 ```
+
+### Filtering tests
+
+You can filter tests by **version**, **distribution**, or a specific **test name**:
+
+```bash
+# Test only Firebird 4.x images
+Invoke-Build Test -VersionFilter "4"
+
+# Test only bullseye distribution images
+Invoke-Build Test -DistributionFilter "bullseye"
+
+# Run specific test
+Invoke-Build Test -TestFilter "FIREBIRD_USER_can_create_user"
+
+# Combine filters
+Invoke-Build Test -VersionFilter "5" -DistributionFilter "noble"
+```
+
+
+
+## Maintenance tasks
+
+The build script includes additional tasks dedicated to maintaining this project.
+
+```bash
+# Update assets.json from GitHub releases
+Invoke-Build Update-Assets
+
+# Update README.md from assets.json
+Invoke-Build Update-Readme
+
+# Regenerate source files
+Invoke-Build Prepare
+
+# Clean up generated files
+Invoke-Build Clean
+```
+
