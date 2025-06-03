@@ -1,35 +1,40 @@
 name: publish
 
+# Build, test and publish official Docker images.
+# - Triggers: Pushes to master and scheduled weekly runs.
+# - Runs on: Only the official repository (FirebirdSQL/firebird-docker)
+
 on:
   push:
     branches:
       - master
-  schedule:
-    - cron: "0 0 * * 1"
-  workflow_dispatch:
 
+  schedule:
+    - cron: "0 0 * * 1"  # Every Monday at midnight
+
+  workflow_dispatch:  # Allows manual dispatch
+
+# Only a single instance of this workflow can be in execution at a given time.
 concurrency:
   group: ${{ github.workflow }}
 
 jobs:
-
-  build-test-publish:
+  build-test-and-publish:
     if: ${{ github.repository == 'FirebirdSQL/firebird-docker' }}
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 10
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Install tools
         shell: pwsh
         run: |
           Install-Module InvokeBuild -Force
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Build
         shell: pwsh
@@ -52,13 +57,10 @@ jobs:
         run: |
           Invoke-Build Publish
 
-      - name: Log out from Docker Hub
-        run: |
-          docker logout
-
       - name: Upload logs
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: logs
+          name: publish-logs-${{ github.run_id }}
           path: generated/logs
+          retention-days: 30  # Longer log retention for published images
