@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   build-and-test:
+    if: ${{ !(github.repository == 'FirebirdSQL/firebird-docker' && github.ref == 'refs/heads/master') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
