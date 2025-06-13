@@ -1,3 +1,10 @@
+param(
+    [string]$VersionFilter,       # Filter by version (e.g. '3', '4.0', '5.0.2').
+    [string]$DistributionFilter,  # Filter by image distribution (e.g. 'bookworm', 'bullseye', 'jammy').
+
+    [string]$TestFilter           # Filter by test name (e.g., 'FIREBIRD_USER_can_create_user'). Used only in the 'Test' task.
+)
+
 #
 # Globals
 #
@@ -23,24 +30,11 @@ function Expand-Template([Parameter(ValueFromPipeline = $true)]$Template) {
     $regex.Replace($Template, $evaluator)
 }
 
-function Copy-TemplateItem([string]$Path, [string]$Destination, [switch]$Force) {
+function Copy-TemplateItem([string]$Path, [string]$Destination) {
     if (Test-Path $Destination) {
-        # File already exists.
-
-        if ($Force) {
-            # With -Force: Overwrite.
-            $outputFile = Get-Item $Destination
-            $outputFile | Set-ItemProperty -Name IsReadOnly -Value $false
-        } else {
-            # Without -Force: Nothing to do.
-            return
-        }
-    }
-
-
-    if ( (-not $Force) -and (Test-Path $Destination) ) {
-        # File already exists. Ignore.
-        return
+        # File already exists: Remove readonly flag (if set).
+        $outputFile = Get-Item $Destination
+        $outputFile | Set-ItemProperty -Name IsReadOnly -Value $false
     }
 
     # Add header
@@ -229,18 +223,44 @@ task Update-Readme {
         }
     }
 
-    Copy-TemplateItem "./src/README.md.template" './README.md' -Force
+    Copy-TemplateItem "./src/README.md.template" './README.md'
 }
 
-# Synopsis: Invoke preprocessor to generate images sources from "assets.json".
-task Prepare {
-    # Clear/create output folder
+# Synopsis: Clean up the output folder.
+task Clean {
     Remove-Item -Path $outputFolder -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+# Synopsis: Load the assets from "assets.json", optionally filtering it by command-line parameters.
+task FilteredAssets {
+    $result = Get-Content -Raw -Path '.\assets.json' | ConvertFrom-Json
+
+    # Filter assets by command-line arguments
+    if ($VersionFilter) {
+        $result = $result | Where-Object { $_.version -like "$VersionFilter*" }
+    }
+
+    if ($DistributionFilter) {
+        $result = $result | Where-Object { $_.tags.$DistributionFilter -ne $null } |
+            # Remove tags that do not match the distribution filter
+            Select-Object -Property 'version','releases',@{Name = 'tags'; Expression = { [PSCustomObject]@{ "$DistributionFilter" = $_.tags.$DistributionFilter } } }
+    }
+
+    if (-not $result) {
+        Write-Error "No assets found matching the specified filters."
+        exit 1
+    }
+
+    $script:assets = $result
+}
+
+# Synopsis: Invoke preprocessor to generate the image source files (can be filtered using command-line options).
+task Prepare FilteredAssets, {
+    # Create output folders if they do not exist
     New-Item -ItemType Directory $outputFolder -Force > $null
     New-Item -ItemType Directory (Join-Path $outputFolder 'logs') -Force > $null
 
     # For each asset
-    $assets = Get-Content -Raw -Path '.\assets.json' | ConvertFrom-Json
     $assets | ForEach-Object {
         $asset = $_
 
@@ -248,11 +268,14 @@ task Prepare {
         $versionFolder = Join-Path $outputFolder $version
         New-Item -ItemType Directory $versionFolder -Force > $null
 
-        # For each image
+        # For each tag
         $asset.tags | Get-Member -MemberType NoteProperty | ForEach-Object {
-            $image = $_.Name
+            $distribution = $_.Name
+            $distributionFolder = Join-Path $versionFolder $distribution
+            New-Item -ItemType Directory $distributionFolder -Force > $null
 
-            $THasArchARM64 = ($asset.releases.arm64.url -ne $null -and $image -ne 'bullseye' -and $image -ne 'jammy' ?
+            # Set variables for the template
+            $THasArchARM64 = ($asset.releases.arm64.url -ne $null -and $distribution -ne 'bullseye' -and $distribution -ne 'jammy' ?
                 '$true' : '$false')
 
             $TUrlArchAMD64 = $asset.releases.amd64.url
@@ -264,55 +287,80 @@ task Prepare {
             $TMajor = $version.Major
             $TImageVersion = $version
 
-            $TImageTags = $asset.tags.$image
+            $TImageTags = $asset.tags.$distribution
             if ($TImageTags) {
                 # https://stackoverflow.com/a/73073678
                 $TImageTags = "'{0}'" -f ($TImageTags -join "', '")
             }
 
-            $variantFolder = Join-Path $versionFolder $image
-            New-Item -ItemType Directory $variantFolder -Force > $null
-
-            Copy-TemplateItem "./src/Dockerfile.$image.template" "$variantFolder/Dockerfile"
-            Copy-Item './src/entrypoint.sh' $variantFolder
-            Copy-TemplateItem "./src/image.build.ps1.template" "$variantFolder/image.build.ps1"
-            Copy-Item './src/image.tests.ps1' $variantFolder
+            # Render templates into the distribution folder
+            Copy-TemplateItem "./src/Dockerfile.$distribution.template" "$distributionFolder/Dockerfile"
+            Copy-Item './src/entrypoint.sh' $distributionFolder
+            Copy-TemplateItem "./src/image.build.ps1.template" "$distributionFolder/image.build.ps1"
+            Copy-Item './src/image.tests.ps1' $distributionFolder
         }
     }
 }
 
-# Synopsis: Build all docker images.
+# Synopsis: Build all docker images (can be filtered using command-line options).
 task Build Prepare, {
+    $taskName = "Build"
+
     $PSStyle.OutputRendering = 'PlainText'
     $logFolder = Join-Path $outputFolder 'logs'
-    $builds = Get-ChildItem "$outputFolder/**/image.build.ps1" -Recurse | ForEach-Object {
-        $version = $_.Directory.Parent.Name
-        $variant = $_.Directory.Name
-        $taskName = "Build"
-        @{
-            File = $_.FullName
-            Task = $taskName
-            Log = (Join-Path $logFolder "$taskName-$version-$variant.log")
+
+    $builds = $assets | ForEach-Object {
+        $asset = $_
+
+        $version = [version]$asset.version
+        $versionFolder = Join-Path $outputFolder $version
+
+        $asset.tags | Get-Member -MemberType NoteProperty | ForEach-Object {
+            $distribution = $_.Name
+            $distributionFolder = Join-Path $versionFolder $distribution
+            @{
+                File = "$distributionFolder/image.build.ps1"
+                Task = $taskName
+                Log = "$logFolder/$taskName-$version-$distribution.log"
+
+                # Parameters passed to Invoke-Build
+                Verbose = $PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
+            }
         }
     }
+
     Build-Parallel $builds
 }
 
-# Synopsis: Run all tests.
-task Test {
+# Synopsis: Run all tests (can be filtered using command-line options).
+task Test FilteredAssets, {
+    $taskName = "Test"
+
     $PSStyle.OutputRendering = 'PlainText'
     $logFolder = Join-Path $outputFolder 'logs'
-    $builds = Get-ChildItem "$outputFolder/**/image.build.ps1" -Recurse | ForEach-Object {
-        $version = $_.Directory.Parent.Name
-        $variant = $_.Directory.Name
-        $taskName = "Test"
-        @{
-            File = $_.FullName
-            Task = $taskName
-            Log = (Join-Path $logFolder "$taskName-$version-$variant.log")
+
+    $tests = $assets | ForEach-Object {
+        $asset = $_
+
+        $version = [version]$asset.version
+        $versionFolder = Join-Path $outputFolder $version
+
+        $asset.tags | Get-Member -MemberType NoteProperty | ForEach-Object {
+            $distribution = $_.Name
+            $distributionFolder = Join-Path $versionFolder $distribution
+            @{
+                File = "$distributionFolder/image.build.ps1"
+                Task = $taskName
+                Log = "$logFolder/$taskName-$version-$distribution.log"
+
+                # Parameters passed to Invoke-Build
+                Verbose = $PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
+                TestFilter = $TestFilter
+            }
         }
     }
-    Build-Parallel $builds
+
+    Build-Parallel $tests
 }
 
 # Synopsis: Publish all images.
