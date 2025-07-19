@@ -19,10 +19,14 @@ Docker images for Firebird Database.
 
 |`firebirdsql/firebird`|Dockerfile|
 |:-|:-:|
-|`5`, `5.0.2`, `latest`|[Dockerfile](./generated/5.0.2/bookworm/Dockerfile)|
- |`bullseye`, `5-bullseye`, `5.0.2-bullseye`|[Dockerfile](./generated/5.0.2/bullseye/Dockerfile)|
- |`jammy`, `5-jammy`, `5.0.2-jammy`|[Dockerfile](./generated/5.0.2/jammy/Dockerfile)|
- |`noble`, `5-noble`, `5.0.2-noble`|[Dockerfile](./generated/5.0.2/noble/Dockerfile)|
+|`5`, `5.0.3`, `latest`|[Dockerfile](./generated/5.0.3/bookworm/Dockerfile)|
+ |`bullseye`, `5-bullseye`, `5.0.3-bullseye`|[Dockerfile](./generated/5.0.3/bullseye/Dockerfile)|
+ |`jammy`, `5-jammy`, `5.0.3-jammy`|[Dockerfile](./generated/5.0.3/jammy/Dockerfile)|
+ |`noble`, `5-noble`, `5.0.3-noble`|[Dockerfile](./generated/5.0.3/noble/Dockerfile)|
+ |`5.0.2`|[Dockerfile](./generated/5.0.2/bookworm/Dockerfile)|
+ |`5.0.2-bullseye`|[Dockerfile](./generated/5.0.2/bullseye/Dockerfile)|
+ |`5.0.2-jammy`|[Dockerfile](./generated/5.0.2/jammy/Dockerfile)|
+ |`5.0.2-noble`|[Dockerfile](./generated/5.0.2/noble/Dockerfile)|
  |`5.0.1`|[Dockerfile](./generated/5.0.1/bookworm/Dockerfile)|
  |`5.0.1-bullseye`|[Dockerfile](./generated/5.0.1/bullseye/Dockerfile)|
  |`5.0.1-jammy`|[Dockerfile](./generated/5.0.1/jammy/Dockerfile)|
@@ -31,10 +35,14 @@ Docker images for Firebird Database.
  |`5.0.0-bullseye`|[Dockerfile](./generated/5.0.0/bullseye/Dockerfile)|
  |`5.0.0-jammy`|[Dockerfile](./generated/5.0.0/jammy/Dockerfile)|
  |`5.0.0-noble`|[Dockerfile](./generated/5.0.0/noble/Dockerfile)|
- |`4`, `4.0.5`|[Dockerfile](./generated/4.0.5/bookworm/Dockerfile)|
- |`4-bullseye`, `4.0.5-bullseye`|[Dockerfile](./generated/4.0.5/bullseye/Dockerfile)|
- |`4-jammy`, `4.0.5-jammy`|[Dockerfile](./generated/4.0.5/jammy/Dockerfile)|
- |`4-noble`, `4.0.5-noble`|[Dockerfile](./generated/4.0.5/noble/Dockerfile)|
+ |`4`, `4.0.6`|[Dockerfile](./generated/4.0.6/bookworm/Dockerfile)|
+ |`4-bullseye`, `4.0.6-bullseye`|[Dockerfile](./generated/4.0.6/bullseye/Dockerfile)|
+ |`4-jammy`, `4.0.6-jammy`|[Dockerfile](./generated/4.0.6/jammy/Dockerfile)|
+ |`4-noble`, `4.0.6-noble`|[Dockerfile](./generated/4.0.6/noble/Dockerfile)|
+ |`4.0.5`|[Dockerfile](./generated/4.0.5/bookworm/Dockerfile)|
+ |`4.0.5-bullseye`|[Dockerfile](./generated/4.0.5/bullseye/Dockerfile)|
+ |`4.0.5-jammy`|[Dockerfile](./generated/4.0.5/jammy/Dockerfile)|
+ |`4.0.5-noble`|[Dockerfile](./generated/4.0.5/noble/Dockerfile)|
  |`4.0.4`|[Dockerfile](./generated/4.0.4/bookworm/Dockerfile)|
  |`4.0.4-bullseye`|[Dockerfile](./generated/4.0.4/bullseye/Dockerfile)|
  |`4.0.4-jammy`|[Dockerfile](./generated/4.0.4/jammy/Dockerfile)|
@@ -55,9 +63,12 @@ Docker images for Firebird Database.
  |`4.0.0-bullseye`|[Dockerfile](./generated/4.0.0/bullseye/Dockerfile)|
  |`4.0.0-jammy`|[Dockerfile](./generated/4.0.0/jammy/Dockerfile)|
  |`4.0.0-noble`|[Dockerfile](./generated/4.0.0/noble/Dockerfile)|
- |`3`, `3.0.12`|[Dockerfile](./generated/3.0.12/bookworm/Dockerfile)|
- |`3-bullseye`, `3.0.12-bullseye`|[Dockerfile](./generated/3.0.12/bullseye/Dockerfile)|
- |`3-jammy`, `3.0.12-jammy`|[Dockerfile](./generated/3.0.12/jammy/Dockerfile)|
+ |`3`, `3.0.13`|[Dockerfile](./generated/3.0.13/bookworm/Dockerfile)|
+ |`3-bullseye`, `3.0.13-bullseye`|[Dockerfile](./generated/3.0.13/bullseye/Dockerfile)|
+ |`3-jammy`, `3.0.13-jammy`|[Dockerfile](./generated/3.0.13/jammy/Dockerfile)|
+ |`3.0.12`|[Dockerfile](./generated/3.0.12/bookworm/Dockerfile)|
+ |`3.0.12-bullseye`|[Dockerfile](./generated/3.0.12/bullseye/Dockerfile)|
+ |`3.0.12-jammy`|[Dockerfile](./generated/3.0.12/jammy/Dockerfile)|
  |`3.0.11`|[Dockerfile](./generated/3.0.11/bookworm/Dockerfile)|
  |`3.0.11-bullseye`|[Dockerfile](./generated/3.0.11/bullseye/Dockerfile)|
  |`3.0.11-jammy`|[Dockerfile](./generated/3.0.11/jammy/Dockerfile)|
