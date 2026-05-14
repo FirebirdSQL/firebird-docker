@@ -19,7 +19,7 @@ src/README.md.template         # README generator
 - Use `{{VAR}}` template syntax (simple string replacement). Never `<% %>` or `ExpandString`.
 - PSFirebird v1.0.0+ from PSGallery is a dependency. Do NOT reference `./tmp/PSFirebird/`.
 - `./tmp/` is for temporary files only. Never commit or reference in production code.
-- Default distro: `bookworm`. Blocked: FB3 + noble (no libncurses5).
+- Default distro: `bookworm`. Blocked: none.
 - ARM64 only for Firebird 5+. No QEMU — use native ARM64 GitHub runners.
 - All tags computed deterministically from version matrix via `Get-ImageTags`.
 

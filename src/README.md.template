@@ -18,8 +18,6 @@ Docker images for Firebird Database.
 |:-|:-:|
 {{SupportedTags}}
 
-> _Firebird 3 does not have an image for Ubuntu 24.04 LTS (Noble Numbat) due to a dependency (`libncurses5`) missing from Ubuntu sources._
-
 
 ## Snapshot (pre-release) images
 

@@ -19,14 +19,13 @@ ENV FIREBIRD_MAJOR=5
 #   -x  Print commands and their arguments as they are executed.
 
 # Prerequisites
-#   FB 3.0 uses libncurses5: https://github.com/FirebirdSQL/firebird/issues/6418#issuecomment-826245785
 RUN set -eux; \
     apt-get update; \
     # Install prerequisites + tini + curl/ca-certificates for download
     apt-get install -y --no-install-recommends \
         libatomic1 \
         libicu72 \
-        $([ $FIREBIRD_MAJOR -eq 3 ] && echo 'libncurses5' || echo 'libncurses6') \
+        libncurses6 \
         libtomcrypt1 \
         libtommath1 \
         netbase \
@@ -76,6 +75,49 @@ RUN set -eux; \
 RUN set -eux; \
     ARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null || echo "$(uname -m)-linux-gnu"); \
     [ $FIREBIRD_MAJOR -eq 3 ] && ln -sf /usr/lib/$ARCH/libtommath.so.1 /usr/lib/$ARCH/libtommath.so.0 || true
+
+# FB 3.0 needs libncurses5/libtinfo5. On Debian Trixie and Ubuntu Noble those
+# packages were dropped from apt; pull them from the previous release pool.
+# See DECISIONS.md D-017 and https://github.com/FirebirdSQL/firebird-docker/issues/42
+RUN set -eux; \
+    if [ "$FIREBIRD_MAJOR" = "3" ]; then \
+        . /etc/os-release; \
+        case "$ID-$VERSION_CODENAME" in \
+            debian-bookworm|debian-bullseye|ubuntu-jammy) \
+                apt-get update; \
+                apt-get install -y --no-install-recommends libtinfo5 libncurses5; \
+                rm -rf /var/lib/apt/lists/* \
+                ;; \
+            debian-trixie) \
+                apt-get update; \
+                apt-get install -y --no-install-recommends ca-certificates curl; \
+                cd /tmp; \
+                curl -fSL -O http://deb.debian.org/debian/pool/main/n/ncurses/libtinfo5_6.4-4_amd64.deb; \
+                curl -fSL -O http://deb.debian.org/debian/pool/main/n/ncurses/libncurses5_6.4-4_amd64.deb; \
+                dpkg -i libtinfo5_6.4-4_amd64.deb libncurses5_6.4-4_amd64.deb; \
+                rm -f libtinfo5_6.4-4_amd64.deb libncurses5_6.4-4_amd64.deb; \
+                apt-get purge -y --auto-remove curl ca-certificates; \
+                apt-get clean; \
+                rm -rf /var/lib/apt/lists/* \
+                ;; \
+            ubuntu-noble) \
+                apt-get update; \
+                apt-get install -y --no-install-recommends ca-certificates curl; \
+                cd /tmp; \
+                curl -fSL -O http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb; \
+                curl -fSL -O http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libncurses5_6.3-2ubuntu0.1_amd64.deb; \
+                dpkg -i libtinfo5_6.3-2ubuntu0.1_amd64.deb libncurses5_6.3-2ubuntu0.1_amd64.deb; \
+                rm -f libtinfo5_6.3-2ubuntu0.1_amd64.deb libncurses5_6.3-2ubuntu0.1_amd64.deb; \
+                apt-get purge -y --auto-remove curl ca-certificates; \
+                apt-get clean; \
+                rm -rf /var/lib/apt/lists/* \
+                ;; \
+            *) \
+                echo "FB3: no libncurses5 provisioning path for $ID-$VERSION_CODENAME" >&2; \
+                exit 1 \
+                ;; \
+        esac; \
+    fi
 
 # System path
 ENV PATH=/opt/firebird/bin:$PATH

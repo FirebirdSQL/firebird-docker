@@ -50,6 +50,8 @@ Decisions made during the v2 rewrite, with rationale.
 
 **Rationale:** Firebird 3 depends on `libncurses5`, which was removed from Ubuntu Noble. Rather than special-casing in code, we declare blocked combinations in config.
 
+**Amended by D-017** for the FB3 + (Noble | Trixie) carve-out: the mechanism remains, but the FB3 entries have been cleared and the missing dependency is now provisioned in the template.
+
 ## D-008: Fork CI scope — latest release per major version
 
 **Decision:** On forks (non-official repo, non-`workflow_dispatch`), CI builds and tests only the latest release of each major Firebird version (e.g. 5.0.3, 4.0.6, 3.0.13). The official repository always performs a full build of all versions.
@@ -103,3 +105,11 @@ Decisions made during the v2 rewrite, with rationale.
 **Decision:** In `init_db()`, run plain SQL files as `cat "$f" | process_sql`, not `process_sql < "$f"`.
 
 **Rationale:** `isql` reads stdin one byte per `read()` syscall (no stdio buffer is set up on stdin). With `cat | isql`, those byte-reads come from a kernel pipe (in-memory, lock-free). With `isql < file`, every byte-read goes through the regular-file path (i_rwsem, atime, FS layer). On native disk this is a ~25 % cost on init.d-driven schema loads; on layered or remote filesystems (Docker Desktop bind mounts on macOS/Windows, gRPC FUSE / virtiofs, NFS) per-syscall overhead amplifies it into 10×+ slowdowns — see [issue #40](https://github.com/FirebirdSQL/firebird-docker/issues/40). The pipe form is also consistent with the compressed cases (`*.sql.gz`, `*.sql.xz`, `*.sql.zst`) which already use a decompressor pipeline. `process_sql` itself stays redirect-friendly so callers other than `init_db` are unaffected.
+
+## D-017: Re-enable Firebird 3 on Trixie and Noble via .deb side-load
+
+**Decision:** Stop excluding `noble` and `trixie` from FB3 builds. Provision `libncurses5`/`libtinfo5` for FB3 by downloading the corresponding `.deb` files from the bookworm (for Trixie) and jammy (for Noble) archive pools and installing them with `dpkg -i`. Clears `blockedVariants["3"]`.
+
+**Rationale:** D-007 declared FB3+Noble unsupportable because `libncurses5` had been dropped from Noble's apt sources, and chose a config-level block over template special-casing. Debian Trixie has since dropped the same packages, which would have required adding Trixie to the block list — defeating the intent of D-012 (Trixie as default distro). The FB3 binaries' only remaining unresolved dependencies on Trixie/Noble are `libncurses.so.5` and `libtinfo.so.5` (verified by `ldd`); the corresponding `.deb` files are still served by the bookworm and jammy archive pools and install cleanly. The workaround is localized to one `RUN` block in the template, gated on `FIREBIRD_MAJOR == 3` and keyed off `/etc/os-release`. Supersedes the FB3 + (Noble | Trixie) clause of D-007. See [issue #42](https://github.com/FirebirdSQL/firebird-docker/issues/42).
+
+Also adds `tzdata` to Noble's distro `extraPackages` (matching Jammy). FB3 relies on libc `localtime()` for the `TZ` env var, which requires `/usr/share/zoneinfo` — the Ubuntu Noble base image, like Jammy, ships without it. FB4+ embeds its own zoneinfo and is unaffected, which is why the gap surfaced only when re-enabling FB3 builds on Noble.

@@ -87,24 +87,34 @@ Docker images for Firebird Database.
 |`3.0.14-bookworm`, `3-bookworm`|[Dockerfile](./generated/3.0.14/bookworm/Dockerfile)|
 |`3.0.14-bullseye`, `3-bullseye`|[Dockerfile](./generated/3.0.14/bullseye/Dockerfile)|
 |`3.0.14-jammy`, `3-jammy`|[Dockerfile](./generated/3.0.14/jammy/Dockerfile)|
+|`3.0.14-noble`, `3-noble`|[Dockerfile](./generated/3.0.14/noble/Dockerfile)|
+|`3.0.14-trixie`, `3-trixie`, `3.0.14`, `3`|[Dockerfile](./generated/3.0.14/trixie/Dockerfile)|
 |`3.0.13-bookworm`|[Dockerfile](./generated/3.0.13/bookworm/Dockerfile)|
 |`3.0.13-bullseye`|[Dockerfile](./generated/3.0.13/bullseye/Dockerfile)|
 |`3.0.13-jammy`|[Dockerfile](./generated/3.0.13/jammy/Dockerfile)|
+|`3.0.13-noble`|[Dockerfile](./generated/3.0.13/noble/Dockerfile)|
+|`3.0.13-trixie`, `3.0.13`|[Dockerfile](./generated/3.0.13/trixie/Dockerfile)|
 |`3.0.12-bookworm`|[Dockerfile](./generated/3.0.12/bookworm/Dockerfile)|
 |`3.0.12-bullseye`|[Dockerfile](./generated/3.0.12/bullseye/Dockerfile)|
 |`3.0.12-jammy`|[Dockerfile](./generated/3.0.12/jammy/Dockerfile)|
+|`3.0.12-noble`|[Dockerfile](./generated/3.0.12/noble/Dockerfile)|
+|`3.0.12-trixie`, `3.0.12`|[Dockerfile](./generated/3.0.12/trixie/Dockerfile)|
 |`3.0.11-bookworm`|[Dockerfile](./generated/3.0.11/bookworm/Dockerfile)|
 |`3.0.11-bullseye`|[Dockerfile](./generated/3.0.11/bullseye/Dockerfile)|
 |`3.0.11-jammy`|[Dockerfile](./generated/3.0.11/jammy/Dockerfile)|
+|`3.0.11-noble`|[Dockerfile](./generated/3.0.11/noble/Dockerfile)|
+|`3.0.11-trixie`, `3.0.11`|[Dockerfile](./generated/3.0.11/trixie/Dockerfile)|
 |`3.0.10-bookworm`|[Dockerfile](./generated/3.0.10/bookworm/Dockerfile)|
 |`3.0.10-bullseye`|[Dockerfile](./generated/3.0.10/bullseye/Dockerfile)|
 |`3.0.10-jammy`|[Dockerfile](./generated/3.0.10/jammy/Dockerfile)|
+|`3.0.10-noble`|[Dockerfile](./generated/3.0.10/noble/Dockerfile)|
+|`3.0.10-trixie`, `3.0.10`|[Dockerfile](./generated/3.0.10/trixie/Dockerfile)|
 |`3.0.9-bookworm`|[Dockerfile](./generated/3.0.9/bookworm/Dockerfile)|
 |`3.0.9-bullseye`|[Dockerfile](./generated/3.0.9/bullseye/Dockerfile)|
 |`3.0.9-jammy`|[Dockerfile](./generated/3.0.9/jammy/Dockerfile)|
+|`3.0.9-noble`|[Dockerfile](./generated/3.0.9/noble/Dockerfile)|
+|`3.0.9-trixie`, `3.0.9`|[Dockerfile](./generated/3.0.9/trixie/Dockerfile)|
 
-
-> _Firebird 3 does not have an image for Ubuntu 24.04 LTS (Noble Numbat) due to a dependency (`libncurses5`) missing from Ubuntu sources._
 
 
 ## Snapshot (pre-release) images
