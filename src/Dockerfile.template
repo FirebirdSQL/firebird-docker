@@ -52,8 +52,8 @@ RUN set -eux; \
                 rm -f /tmp/libtinfo5.deb /tmp/libncurses5.deb \
                 ;; \
             ubuntu-noble) \
-                curl -fSL -o /tmp/libtinfo5.deb http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.2_amd64.deb; \
-                curl -fSL -o /tmp/libncurses5.deb http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libncurses5_6.3-2ubuntu0.2_amd64.deb; \
+                curl -fSL -o /tmp/libtinfo5.deb http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.3_amd64.deb; \
+                curl -fSL -o /tmp/libncurses5.deb http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libncurses5_6.3-2ubuntu0.3_amd64.deb; \
                 dpkg -i /tmp/libtinfo5.deb /tmp/libncurses5.deb; \
                 rm -f /tmp/libtinfo5.deb /tmp/libncurses5.deb \
                 ;; \
