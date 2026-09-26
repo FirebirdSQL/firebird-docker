@@ -2,11 +2,14 @@
 # Functions
 #
 
+# Data directory for test containers. Same ownership and mode as in the image layer (firebird:0, 0775).
+$dataTmpfs = '/var/lib/firebird/data:uid=84,gid=0,mode=0775'
+
 # Run commands in a container and return.
 function Invoke-Container([string[]]$DockerParameters, [string[]]$ImageParameters) {
     assert $env:FULL_IMAGE_NAME "'FULL_IMAGE_NAME' environment variable must be set to the image name to test."
     
-    $allParameters = @('run', '--tmpfs', '/var/lib/firebird/data', '--rm'; $DockerParameters; $env:FULL_IMAGE_NAME)
+    $allParameters = @('run', '--tmpfs', $dataTmpfs, '--rm'; $DockerParameters; $env:FULL_IMAGE_NAME)
     if ($ImageParameters) {
         # Do not append a $null as last parameter if $ImageParameters is empty
         $allParameters += $ImageParameters
@@ -21,7 +24,7 @@ function Invoke-Container([string[]]$DockerParameters, [string[]]$ImageParameter
 function Use-Container([string[]]$Parameters, [Parameter(Mandatory)][ScriptBlock]$ScriptBlock) {
     assert $env:FULL_IMAGE_NAME "'FULL_IMAGE_NAME' environment variable must be set to the image name to test."
 
-    $allParameters = @('run'; $Parameters; '--tmpfs', '/var/lib/firebird/data', '--detach', $env:FULL_IMAGE_NAME)
+    $allParameters = @('run'; $Parameters; '--tmpfs', $dataTmpfs, '--detach', $env:FULL_IMAGE_NAME)
 
     Write-Verbose 'Starting container... Command line is'
     Write-Verbose "  docker $allParameters"
@@ -594,4 +597,101 @@ task Tag_correctness_via_docker_inspect {
     assert ($null -ne $version) "Expected 'org.opencontainers.image.version' label to be set."
     # Accept either a semver release (e.g. '5.0.3') or a snapshot tag (e.g. '5-snapshot', '6-snapshot')
     assert ($version -match '^\d+\.\d+\.\d+$' -or $version -match '^\d+-snapshot$') "Expected version label '$version' to be semver or snapshot format."
+}
+
+#
+# Non-root support -- https://github.com/FirebirdSQL/firebird-docker/issues/46
+#
+
+task Runtime_paths_are_owned_by_firebird_and_group_root {
+    # Runs 'stat' directly (not via Invoke-Container) to see the data directory as shipped in the image layer, not a tmpfs.
+    $paths = '/opt/firebird', '/opt/firebird/firebird.conf', '/opt/firebird/firebird.log', '/opt/firebird/fb_guard', '/tmp/firebird', '/var/lib/firebird/data'
+    $stats = docker run --rm --entrypoint stat $env:FULL_IMAGE_NAME -c '%U %g %A %n' @paths
+    assert ($LastExitCode -eq 0) "Expected 'stat' to succeed on all runtime paths."
+
+    $stats | ForEach-Object {
+        $owner, $gid, $mode, $path = $_ -split ' '
+        assert ($owner -eq 'firebird') "Expected '$path' to be owned by 'firebird', got '$owner'."
+        assert ($gid -eq '0') "Expected '$path' to have group 0 (root), got '$gid'."
+        assert ($mode.Substring(1, 3) -eq $mode.Substring(4, 3)) "Expected '$path' to have group permissions equal to owner permissions, got '$mode'."
+    }
+
+    # Binaries must stay owned by root.
+    docker run --rm --entrypoint stat $env:FULL_IMAGE_NAME -c '%U' /opt/firebird/bin/firebird |
+        Contains -Pattern '^root$' -ErrorMessage "Expected Firebird binaries to stay owned by root."
+}
+
+# Runs the whole initialization path (config, SYSDBA password, user, database, init scripts) as the given user.
+function Test-NonRootInitialization([Parameter(Mandatory)][string]$User) {
+    $initDbFolder = New-TemporaryDirectory
+    try {
+        @'
+        CREATE TABLE init_check (id INTEGER NOT NULL PRIMARY KEY);
+'@ | Out-File "$initDbFolder/10-init.sql"
+
+        Use-Container -Parameters '--user', $User, '-e', 'FIREBIRD_CONF_WireCrypt=Enabled', '-e', 'FIREBIRD_ROOT_PASSWORD=passw0rd', '-e', 'FIREBIRD_USER=alice', '-e', 'FIREBIRD_PASSWORD=bird', '-e', 'FIREBIRD_DATABASE=test.fdb', '-v', "$($initDbFolder):/docker-entrypoint-initdb.d/" {
+            param($cId)
+
+            $expectedUid = ($User -split ':')[0]
+            $serverUid = docker exec $cId ps -o uid= -C firebird
+            assert ($serverUid.Trim() -eq $expectedUid) "Expected Firebird server to run as UID $expectedUid, got '$serverUid'."
+
+            $logs = docker logs $cId 2>&1
+            $logs | Contains -Pattern 'WireCrypt = Enabled' -ErrorMessage "Expected FIREBIRD_CONF_WireCrypt to be applied when running as '$User'."
+            $logs | ContainsExactly -Pattern 'WARNING' -ExpectedCount 0 -ErrorMessage "Expected no permission warning when running as '$User'."
+
+            'SELECT 1 FROM rdb$database;' |
+                docker exec -i $cId isql -b -q -u SYSDBA -p passw0rd inet:///var/lib/firebird/data/test.fdb |
+                    ExitCodeIs -ExpectedValue 0 -ErrorMessage "Expected successful login with new SYSDBA password when running as '$User'."
+
+            docker exec $cId test -f /opt/firebird/SYSDBA.password |
+                ExitCodeIs -ExpectedValue 1 -ErrorMessage "Expected SYSDBA.password file to be removed when running as '$User'."
+
+            # Init script must have been executed as 'alice'
+            'SET LIST ON; SELECT rdb$owner_name AS table_owner FROM rdb$relations WHERE rdb$relation_name = ''INIT_CHECK'';' |
+                docker exec -i $cId isql -b -q -u alice -p bird inet:///var/lib/firebird/data/test.fdb |
+                    Contains -Pattern 'TABLE_OWNER(\s+)ALICE' -ErrorMessage "Expected init script to create table 'init_check' owned by 'alice' when running as '$User'."
+        }
+    }
+    finally {
+        Remove-Item $initDbFolder -Force -Recurse
+    }
+}
+
+task Can_run_as_firebird_user {
+    Test-NonRootInitialization -User '84:84'
+}
+
+task Can_run_as_arbitrary_uid_with_group_root {
+    # OpenShift restricted SCC: random UID, no /etc/passwd entry, GID 0.
+    Test-NonRootInitialization -User '12345:0'
+}
+
+task Without_FIREBIRD_USER_database_is_owned_by_SYSDBA_for_any_user {
+    # Local connections would otherwise take the OS user name (e.g. 'FIREBIRD' for UID 84), not SYSDBA.
+    $initDbFolder = New-TemporaryDirectory
+    try {
+        @'
+        CREATE TABLE init_check (id INTEGER NOT NULL PRIMARY KEY);
+'@ | Out-File "$initDbFolder/10-init.sql"
+
+        foreach ($user in '0:0', '84:84', '12345:0') {
+            Use-Container -Parameters '--user', $user, '-e', 'FIREBIRD_DATABASE=test.fdb', '-v', "$($initDbFolder):/docker-entrypoint-initdb.d/" {
+                param($cId)
+
+                'SET LIST ON; SELECT rdb$owner_name AS table_owner FROM rdb$relations WHERE rdb$relation_name = ''INIT_CHECK'';' |
+                    docker exec -i $cId isql -b -q -u SYSDBA /var/lib/firebird/data/test.fdb |
+                        Contains -Pattern 'TABLE_OWNER(\s+)SYSDBA' -ErrorMessage "Expected init script to create table 'init_check' owned by SYSDBA when running as '$user'."
+            }
+        }
+    }
+    finally {
+        Remove-Item $initDbFolder -Force -Recurse
+    }
+}
+
+task Unsupported_user_shows_permission_warning {
+    # A UID which is neither 'firebird' nor in group 0 cannot write runtime files.
+    $($stdout = Invoke-Container -DockerParameters '--user', '1000:1000', '-e', 'FIREBIRD_CONF_WireCrypt=Enabled') 2>&1 |
+        Contains -Pattern 'WARNING: Running as UID 1000 / GID 1000' -ErrorMessage "Expected permission warning when running as an unsupported user."
 }

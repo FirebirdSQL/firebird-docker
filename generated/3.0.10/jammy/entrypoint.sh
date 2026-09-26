@@ -107,6 +107,25 @@ indent() {
     sed 's/^/    /';
 }
 
+# Warns when a non-root user cannot write to Firebird runtime files.
+#   Supported non-root users are 'firebird' and any UID with GID 0 (e.g. OpenShift restricted SCC).
+check_permissions() {
+    if [ "$(id -u)" = '0' ]; then
+        return
+    fi
+
+    if [ ! -w /opt/firebird ] || [ ! -w "$FIREBIRD_DATA" ]; then
+        # [Tabs ahead]
+        cat >&2 <<-EOL
+			-----
+			WARNING: Running as UID $(id -u) / GID $(id -g), which cannot write to /opt/firebird or $FIREBIRD_DATA.
+			
+			         Run the container as root, as user 'firebird' (UID 84), or as any UID with GID 0.
+			-----
+		EOL
+    fi
+}
+
 # Set Firebird configuration parameters from environment variables.
 set_config() {
     read_from_file_or_env 'FIREBIRD_USE_LEGACY_AUTH'
@@ -203,7 +222,7 @@ create_user() {
         escaped_password=$(escape_sql_string "$FIREBIRD_PASSWORD")
 
         # [Tabs ahead]
-        /opt/firebird/bin/isql -b security.db <<-EOL
+        /opt/firebird/bin/isql -b -user SYSDBA security.db <<-EOL
 			CREATE OR ALTER USER ${quoted_user}
 			    PASSWORD '${escaped_password}'
 			    GRANT ADMIN ROLE;
@@ -221,6 +240,9 @@ process_sql() {
         #   authentication, and the server then normalizes the name exactly like it
         #   normalized the database owner name, so DDL permissions work in init scripts.
         isql_command+=( -u "$(unquote_sql_identifier "$(quote_sql_identifier "$FIREBIRD_USER")")" -p "$FIREBIRD_PASSWORD" )
+    else
+        # Local connections otherwise take the OS user name, which is SYSDBA only for root.
+        isql_command+=( -u SYSDBA )
 	fi
 
 	if [ -n "$FIREBIRD_DATABASE" ]; then
@@ -302,7 +324,7 @@ create_db() {
             [ -n "$FIREBIRD_DATABASE_DEFAULT_CHARSET" ] && default_charset="DEFAULT CHARACTER SET $FIREBIRD_DATABASE_DEFAULT_CHARSET"
 
             # [Tabs ahead]
-            /opt/firebird/bin/isql -b -q <<-EOL
+            /opt/firebird/bin/isql -b -q -user SYSDBA <<-EOL
 			CREATE DATABASE '${escaped_database}'
 			    $user_and_password
 			    $page_size
@@ -345,6 +367,7 @@ run_daemon_and_wait() {
 # main()
 #
 if [ "$1" = 'firebird' ]; then
+    check_permissions
     set_config
     set_sysdba
 

@@ -323,6 +323,27 @@ Alternatively, you can use the same time zone as your host system by mapping the
 
 
 
+## Running as a non-root user
+
+The container runs as `root` by default. It can also run as a non-root user, without any change in behavior:
+
+- as the `firebird` user (UID `84`), e.g. `docker run --user firebird ...`; or
+- as **any** UID with GID `0` (`root` group), e.g. `docker run --user 12345:0 ...`. This is how OpenShift runs containers under its default `restricted` security context constraint, which assigns a random UID.
+
+```yaml
+# Kubernetes
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 84        # or any UID...
+      runAsGroup: 0        # ...as long as the group is 0
+```
+
+Other UID/GID combinations are not supported: the entrypoint shows a warning and Firebird cannot write its runtime files.
+
+> **IMPORTANT:** When using a bind mount or a pre-existing volume for `/var/lib/firebird/data`, it must be writable by the chosen user. Databases created while running as `root` are owned by `root`, and a non-root container cannot open them until you change their ownership (e.g. `chown -R 84:0` on the data directory).
+
+
+
 ## Backup and Restore
 
 ### For online databases

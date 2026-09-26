@@ -121,10 +121,23 @@ ENV PATH=/opt/firebird/bin:$PATH
 
 # Data directory
 ENV FIREBIRD_DATA=/var/lib/firebird/data
+
+# Non-root support: runtime-writable paths are owned by 'firebird' with group 0 (root), and group permissions equal
+#   owner permissions. The image still runs as root by default, but it also runs as 'firebird' (--user firebird) or as
+#   an arbitrary UID with GID 0 (OpenShift restricted SCC). Binaries, libraries and plugins stay owned by root.
+#   The data directory is a VOLUME: its ownership must be set here, in the image layer.
+#   Lock and shared memory files left in /tmp/firebird by the installer are removed (Firebird recreates them at runtime).
+#   See DECISIONS.md D-020 and https://github.com/FirebirdSQL/firebird-docker/issues/46
 RUN set -eux; \
     mkdir -p "$FIREBIRD_DATA"; \
-    chown -R firebird:firebird "$FIREBIRD_DATA"; \
-    chmod 755 "$FIREBIRD_DATA"
+    rm -rf /tmp/firebird/*; \
+    cd /opt/firebird; \
+    for f in . SYSDBA.password firebird.conf firebird.log fb_guard replication.log security*.fdb /tmp/firebird "$FIREBIRD_DATA"; do \
+        if [ -e "$f" ]; then \
+            chown firebird:0 "$f"; \
+            chmod g=u,o-w "$f"; \
+        fi; \
+    done
 VOLUME $FIREBIRD_DATA
 
 # Entrypoint
