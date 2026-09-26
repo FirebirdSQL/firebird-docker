@@ -101,9 +101,17 @@ The following environment variables can be used to customize the container.
 
 ### `FIREBIRD_ROOT_PASSWORD`
 
-Firebird installer generates a one-off password for `SYSDBA` and stores it in `/opt/firebird/SYSDBA.password`.
-
 If `FIREBIRD_ROOT_PASSWORD` is set, `SYSDBA` password will be changed. And the file `/opt/firebird/SYSDBA.password` will be removed.
+
+Otherwise, a random password for `SYSDBA` is generated on the container's first start and stored in `/opt/firebird/SYSDBA.password`. It is not printed to the container log. To read it:
+
+```bash
+docker exec MY_CONTAINER_NAME_OR_ID cat /opt/firebird/SYSDBA.password
+```
+
+The security database lives in the container (not in the data volume). Therefore, restarting a container keeps its password, while recreating it (e.g. `docker compose up` after an image update) generates a new one. Set `FIREBIRD_ROOT_PASSWORD` if you need a stable `SYSDBA` password.
+
+A security database changed since the image was built (e.g. a persisted `/opt/firebird/security5.fdb` bind-mounted into the container) is left untouched.
 
 
 
