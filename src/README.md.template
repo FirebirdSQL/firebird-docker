@@ -215,7 +215,7 @@ Or, with Docker Compose:
 > **IMPORTANT:**
 > - The file must exist on the host before the container starts. With `-v` (or a Compose short syntax volume), a missing file is silently created as an empty _directory_, and Firebird cannot open the security database. `--mount` fails with an error instead.
 > - Use the file name of the Firebird version you run, and extract it from an image of that same major version.
-> - `/opt/firebird/SYSDBA.password` comes from the image and does not follow changes to your security database. Once the `SYSDBA` password in it changes (e.g. with `FIREBIRD_ROOT_PASSWORD`), a new container shows a password that no longer works. Set `FIREBIRD_ROOT_PASSWORD` on every start, or keep track of the `SYSDBA` password yourself.
+> - Do not rely on `/opt/firebird/SYSDBA.password`: it belongs to the container, not to your security database, and is not kept with it. Set `FIREBIRD_ROOT_PASSWORD` on every start, or keep track of the `SYSDBA` password yourself.
 > - When running as a non-root user, the file must be writable by that user (e.g. `chown 84:0 security5.fdb`).
 > - Never use the same file in two containers running at the same time.
 
