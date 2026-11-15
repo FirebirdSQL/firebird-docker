@@ -100,10 +100,10 @@ RUN set -eux; \
                 apt-get update; \
                 apt-get install -y --no-install-recommends ca-certificates curl; \
                 cd /tmp; \
-                curl -fSL -O http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.2_amd64.deb; \
-                curl -fSL -O http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libncurses5_6.3-2ubuntu0.2_amd64.deb; \
-                dpkg -i libtinfo5_6.3-2ubuntu0.2_amd64.deb libncurses5_6.3-2ubuntu0.2_amd64.deb; \
-                rm -f libtinfo5_6.3-2ubuntu0.2_amd64.deb libncurses5_6.3-2ubuntu0.2_amd64.deb; \
+                curl -fSL -O http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.3_amd64.deb; \
+                curl -fSL -O http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libncurses5_6.3-2ubuntu0.3_amd64.deb; \
+                dpkg -i libtinfo5_6.3-2ubuntu0.3_amd64.deb libncurses5_6.3-2ubuntu0.3_amd64.deb; \
+                rm -f libtinfo5_6.3-2ubuntu0.3_amd64.deb libncurses5_6.3-2ubuntu0.3_amd64.deb; \
                 apt-get purge -y --auto-remove curl ca-certificates; \
                 apt-get clean; \
                 rm -rf /var/lib/apt/lists/* \
