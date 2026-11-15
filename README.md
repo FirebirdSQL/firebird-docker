@@ -282,6 +282,43 @@ More information:
 
 
 
+## Persisting the security database
+
+Firebird users are stored in the security database: `/opt/firebird/security5.fdb` (`security4.fdb` for Firebird 4, `security3.fdb` for Firebird 3). This includes users created with `FIREBIRD_USER`, with `CREATE USER`, or by your application.
+
+This file is part of the container, not of the `/var/lib/firebird/data` volume. It is kept when the container restarts, but a _new_ container (e.g. after `docker compose down` and `up`, or when upgrading the image) starts with the default security database of the image. Only `SYSDBA` and `FIREBIRD_USER` are then set up again.
+
+To keep your users, store the security database outside the container with a [Docker bind mount](https://docs.docker.com/engine/storage/bind-mounts/). Start from the default file of the image:
+
+```bash
+# Extract the default security database from the image
+docker create --name fb-tmp firebirdsql/firebird
+docker cp fb-tmp:/opt/firebird/security5.fdb ./security5.fdb
+docker rm fb-tmp
+
+# Use it with a bind mount
+docker run -d --mount type=bind,src=$(pwd)/security5.fdb,dst=/opt/firebird/security5.fdb \
+    -v ./data:/var/lib/firebird/data \
+    -e FIREBIRD_ROOT_PASSWORD=my_secret_password firebirdsql/firebird
+```
+
+Or, with Docker Compose:
+
+```yaml
+    volumes:
+      - ./data:/var/lib/firebird/data
+      - ./security5.fdb:/opt/firebird/security5.fdb
+```
+
+> **IMPORTANT:**
+> - The file must exist on the host before the container starts. With `-v` (or a Compose short syntax volume), a missing file is silently created as an empty _directory_, and Firebird cannot open the security database. `--mount` fails with an error instead.
+> - Use the file name of the Firebird version you run, and extract it from an image of that same major version.
+> - Do not rely on `/opt/firebird/SYSDBA.password`: it belongs to the container, not to your security database, and is not kept with it. Set `FIREBIRD_ROOT_PASSWORD` on every start, or keep track of the `SYSDBA` password yourself.
+> - When running as a non-root user, the file must be writable by that user (e.g. `chown 84:0 security5.fdb`).
+> - Never use the same file in two containers running at the same time.
+
+
+
 ## Using Firebird Events
 
 To use this image with [Firebird Events](https://firebirdsql.org/file/documentation/html/en/refdocs/fblangref50/firebird-50-language-reference.html#fblangref50-psql-postevent) you need to:
