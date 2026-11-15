@@ -111,7 +111,7 @@ docker exec MY_CONTAINER_NAME_OR_ID cat /opt/firebird/SYSDBA.password
 
 The security database lives in the container (not in the data volume). Therefore, restarting a container keeps its password, while recreating it (e.g. `docker compose up` after an image update) generates a new one. Set `FIREBIRD_ROOT_PASSWORD` if you need a stable `SYSDBA` password.
 
-A security database changed since the image was built (e.g. a persisted `/opt/firebird/security5.fdb` bind-mounted into the container) is left untouched.
+A security database changed since the image was built (e.g. a persisted `/opt/firebird/security5.fdb` bind-mounted into the container) is left untouched. In this case, the `/opt/firebird/SYSDBA.password` file shipped in the image is removed, because its password does not apply to that security database.
 
 
 
