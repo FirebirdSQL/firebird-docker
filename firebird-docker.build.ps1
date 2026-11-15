@@ -1,6 +1,6 @@
 param(
     [string]$VersionFilter,       # Filter by version (e.g. '3', '4.0', '5.0.2').
-    [string]$DistributionFilter,  # Filter by image distribution (e.g. 'bookworm', 'bullseye', 'jammy').
+    [string]$DistributionFilter,  # Filter by image distribution (e.g. 'bookworm', 'trixie', 'jammy').
     [switch]$LatestPerMajor,      # Build/test only the latest release of each major Firebird version.
 
     [string]$TestFilter,          # Filter by test name (e.g., 'FIREBIRD_USER_can_create_user'). Used only in the 'Test' task.
