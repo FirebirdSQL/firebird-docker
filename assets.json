@@ -7,11 +7,6 @@
         "icuPackage": "libicu72",
         "extraPackages": ""
       },
-      "bullseye": {
-        "baseImage": "debian:bullseye-slim",
-        "icuPackage": "libicu67",
-        "extraPackages": ""
-      },
       "jammy": {
         "baseImage": "ubuntu:jammy",
         "icuPackage": "libicu70",
@@ -49,11 +44,6 @@
           "5-bookworm",
           "bookworm"
         ],
-        "bullseye": [
-          "5.0.4-bullseye",
-          "5-bullseye",
-          "bullseye"
-        ],
         "jammy": [
           "5.0.4-jammy",
           "5-jammy",
@@ -88,7 +78,6 @@
       },
       "tags": {
         "bookworm": "5.0.3-bookworm",
-        "bullseye": "5.0.3-bullseye",
         "jammy": "5.0.3-jammy",
         "noble": "5.0.3-noble",
         "trixie": [
@@ -111,7 +100,6 @@
       },
       "tags": {
         "bookworm": "5.0.2-bookworm",
-        "bullseye": "5.0.2-bullseye",
         "jammy": "5.0.2-jammy",
         "noble": "5.0.2-noble",
         "trixie": [
@@ -134,7 +122,6 @@
       },
       "tags": {
         "bookworm": "5.0.1-bookworm",
-        "bullseye": "5.0.1-bullseye",
         "jammy": "5.0.1-jammy",
         "noble": "5.0.1-noble",
         "trixie": [
@@ -157,7 +144,6 @@
       },
       "tags": {
         "bookworm": "5.0.0-bookworm",
-        "bullseye": "5.0.0-bullseye",
         "jammy": "5.0.0-jammy",
         "noble": "5.0.0-noble",
         "trixie": [
@@ -178,10 +164,6 @@
         "bookworm": [
           "4.0.7-bookworm",
           "4-bookworm"
-        ],
-        "bullseye": [
-          "4.0.7-bullseye",
-          "4-bullseye"
         ],
         "jammy": [
           "4.0.7-jammy",
@@ -209,7 +191,6 @@
       },
       "tags": {
         "bookworm": "4.0.6-bookworm",
-        "bullseye": "4.0.6-bullseye",
         "jammy": "4.0.6-jammy",
         "noble": "4.0.6-noble",
         "trixie": [
@@ -228,7 +209,6 @@
       },
       "tags": {
         "bookworm": "4.0.5-bookworm",
-        "bullseye": "4.0.5-bullseye",
         "jammy": "4.0.5-jammy",
         "noble": "4.0.5-noble",
         "trixie": [
@@ -247,7 +227,6 @@
       },
       "tags": {
         "bookworm": "4.0.4-bookworm",
-        "bullseye": "4.0.4-bullseye",
         "jammy": "4.0.4-jammy",
         "noble": "4.0.4-noble",
         "trixie": [
@@ -266,7 +245,6 @@
       },
       "tags": {
         "bookworm": "4.0.3-bookworm",
-        "bullseye": "4.0.3-bullseye",
         "jammy": "4.0.3-jammy",
         "noble": "4.0.3-noble",
         "trixie": [
@@ -285,7 +263,6 @@
       },
       "tags": {
         "bookworm": "4.0.2-bookworm",
-        "bullseye": "4.0.2-bullseye",
         "jammy": "4.0.2-jammy",
         "noble": "4.0.2-noble",
         "trixie": [
@@ -304,7 +281,6 @@
       },
       "tags": {
         "bookworm": "4.0.1-bookworm",
-        "bullseye": "4.0.1-bullseye",
         "jammy": "4.0.1-jammy",
         "noble": "4.0.1-noble",
         "trixie": [
@@ -323,7 +299,6 @@
       },
       "tags": {
         "bookworm": "4.0.0-bookworm",
-        "bullseye": "4.0.0-bullseye",
         "jammy": "4.0.0-jammy",
         "noble": "4.0.0-noble",
         "trixie": [
@@ -344,10 +319,6 @@
         "bookworm": [
           "3.0.14-bookworm",
           "3-bookworm"
-        ],
-        "bullseye": [
-          "3.0.14-bullseye",
-          "3-bullseye"
         ],
         "jammy": [
           "3.0.14-jammy",
@@ -375,7 +346,6 @@
       },
       "tags": {
         "bookworm": "3.0.13-bookworm",
-        "bullseye": "3.0.13-bullseye",
         "jammy": "3.0.13-jammy",
         "noble": "3.0.13-noble",
         "trixie": [
@@ -394,7 +364,6 @@
       },
       "tags": {
         "bookworm": "3.0.12-bookworm",
-        "bullseye": "3.0.12-bullseye",
         "jammy": "3.0.12-jammy",
         "noble": "3.0.12-noble",
         "trixie": [
@@ -413,7 +382,6 @@
       },
       "tags": {
         "bookworm": "3.0.11-bookworm",
-        "bullseye": "3.0.11-bullseye",
         "jammy": "3.0.11-jammy",
         "noble": "3.0.11-noble",
         "trixie": [
@@ -432,7 +400,6 @@
       },
       "tags": {
         "bookworm": "3.0.10-bookworm",
-        "bullseye": "3.0.10-bullseye",
         "jammy": "3.0.10-jammy",
         "noble": "3.0.10-noble",
         "trixie": [
@@ -451,7 +418,6 @@
       },
       "tags": {
         "bookworm": "3.0.9-bookworm",
-        "bullseye": "3.0.9-bullseye",
         "jammy": "3.0.9-jammy",
         "noble": "3.0.9-noble",
         "trixie": [

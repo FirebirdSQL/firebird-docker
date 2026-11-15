@@ -64,8 +64,8 @@ Invoke-Build Test
 # Test only Firebird 4.x images
 Invoke-Build Test -VersionFilter "4"
 
-# Test only bullseye images
-Invoke-Build Test -DistributionFilter "bullseye"
+# Test only bookworm images
+Invoke-Build Test -DistributionFilter "bookworm"
 
 # Run a single test by name
 Invoke-Build Test -TestFilter "FIREBIRD_USER_can_create_user"

@@ -80,7 +80,7 @@ Decisions made during the v2 rewrite, with rationale.
 
 **Decision:** The `defaultDistro` in `assets.json` is `trixie` (Debian 13). Bare tags (`5.0.4`, `5`, `latest`) resolve to the Trixie variant.
 
-**Rationale:** Trixie is the current Debian stable — it ships newer library versions (libicu76, OpenSSL 3.x, glibc 2.41) that match what a fresh deployment would pull elsewhere. Bookworm remains available as `*-bookworm` tags for users who prefer the previous LTS for production stability. Users who want to pin should use the explicit `*-bookworm` or `*-bullseye` tags; the bare tags move forward with Debian stable.
+**Rationale:** Trixie is the current Debian stable — it ships newer library versions (libicu76, OpenSSL 3.x, glibc 2.41) that match what a fresh deployment would pull elsewhere. Bookworm remains available as `*-bookworm` tags for users who prefer the previous LTS for production stability. Users who want to pin should use the explicit `*-bookworm` tags; the bare tags move forward with Debian stable.
 
 ## D-013: Digest-based multi-arch assembly
 
@@ -121,3 +121,9 @@ Also adds `tzdata` to Noble's distro `extraPackages` (matching Jammy). FB3 relie
 **Decision:** The `update-repo` job in `publish-fork.yaml` only commits and pushes regenerated `generated/` and `README.md` when running on the fork's default branch (`github.event.repository.default_branch`). Dispatches on PR or feature branches still run `Invoke-Build Prepare` and `Invoke-Build Update-Readme` (so a template-substitution regression still fails the workflow) but skip the `git commit` / `git push`. Amends D-014 for the publish-fork case; `publish.yaml` (the official-repo publish) is unchanged.
 
 **Rationale:** `publish-fork.yaml` passes `-Registry 'ghcr.io/<owner>'` to `Update-Readme`, which substitutes the fork's registry into the README table header. The previous unguarded auto-commit pushed that fork-specific README back to whatever branch was dispatched, including branches with open upstream PRs — directly polluting the PR diff with content that must not land upstream, and breaking GitHub's linear rebase when the upstream master had its own concurrent `README.md` changes (observed during PR #43, which required a force-pushed clean rebase to unblock). Branch-gating preserves D-014's "generated/ tracked in git" invariant on the fork's default branch while keeping PR/feature branches diff-clean against upstream. Confines the `-Registry` rewrite to the only place the fork wants it (its own showcased README on `master`).
+
+## D-022: Bullseye images are no longer built
+
+**Decision:** Debian 11 `bullseye` is removed from `config.distros` in `assets.json`, so no `*-bullseye` image is built, tested or published, and its `generated/` folders are deleted. The `*-bullseye` tags already on Docker Hub are kept as they are (no deletion). The README lists bullseye under "Discontinued distributions" and points to `trixie` (default) or `bookworm`.
+
+**Rationale:** Debian 11 reached the end of its LTS period on 2026-08-31. Its packages are being moved off the main mirrors: the `bullseye-security` index on `deb.debian.org` still lists packages whose `.deb` files return 404, and `archive.debian.org` does not carry `bullseye-security` yet, so every bullseye build fails in `apt-get install`. Because the build stops at the first failed image, this also failed every CI run and hid the results of the other distributions. Even with working mirrors, new bullseye images would ship OpenSSL, curl and ICU without security updates. Deleting the published tags was rejected: it would break existing deployments that pin them, with no benefit. See [issue #50](https://github.com/FirebirdSQL/firebird-docker/issues/50).
