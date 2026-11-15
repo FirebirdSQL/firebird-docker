@@ -44,6 +44,11 @@ docker pull firebirdsql/firebird:5-snapshot
 Images for Firebird 5.x and later are available for both `linux/amd64` and `linux/arm64`. Firebird 3.x and 4.x images are `linux/amd64` only.
 
 
+## Discontinued distributions
+
+Debian 11 `bullseye` images (`*-bullseye` tags) are no longer built, because Debian 11 reached its end of life. The tags already published remain available, but they will not receive any updates, including security fixes. Please move to `trixie` (the default) or `bookworm`.
+
+
 
 # How to use this image
 

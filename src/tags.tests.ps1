@@ -69,11 +69,11 @@ Describe 'Get-ImageTags' {
     }
 
     Context 'Older patch version on non-default distro' {
-        It 'generates only version-distro for 4.0.5-bullseye' {
-            $tags = Get-ImageTags -Version '4.0.5' -Distro 'bullseye' `
+        It 'generates only version-distro for 4.0.5-jammy' {
+            $tags = Get-ImageTags -Version '4.0.5' -Distro 'jammy' `
                 -IsLatestOfMajor $false -IsLatestOverall $false -DefaultDistro 'bookworm'
 
-            $tags | Should -Contain '4.0.5-bullseye'   # version-distro
+            $tags | Should -Contain '4.0.5-jammy'      # version-distro
             $tags | Should -Not -Contain '4.0.5'       # not default distro
             $tags | Should -HaveCount 1
         }
