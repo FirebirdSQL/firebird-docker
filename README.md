@@ -351,7 +351,7 @@ Alternatively, you can use the same time zone as your host system by mapping the
 The container runs as `root` by default. It can also run as a non-root user, without any change in behavior:
 
 - as the `firebird` user (UID `84`), e.g. `docker run --user firebird ...`; or
-- as **any** UID with GID `0` (`root` group), e.g. `docker run --user 12345:0 ...`. This is how OpenShift runs containers under its default `restricted` security context constraint, which assigns a random UID.
+- as **any** UID with GID `0` (`root` group), e.g. `docker run --user 12345:0 ...`.
 
 ```yaml
 # Kubernetes
@@ -360,6 +360,8 @@ The container runs as `root` by default. It can also run as a non-root user, wit
       runAsUser: 84        # or any UID...
       runAsGroup: 0        # ...as long as the group is 0
 ```
+
+**OpenShift:** under the default `restricted-v2` (or `restricted`) security context constraint, leave `runAsUser` and `runAsGroup` unset. OpenShift assigns a UID from the project's range and runs the container with GID `0`, which this image supports. A UID outside that range, such as `runAsUser: 84`, is rejected by the security context constraint (`must be in the ranges: [...]`).
 
 Other UID/GID combinations are not supported: the entrypoint shows a warning and Firebird cannot write its runtime files.
 
